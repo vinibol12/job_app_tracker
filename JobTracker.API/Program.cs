@@ -16,14 +16,15 @@ builder.Services.AddDbContext<JobTrackerContext>(options =>
 // Add Repository
 builder.Services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
 
-// Add CORS
+// Update CORS policy to be more specific
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:3000")  // React's default port
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -36,7 +37,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Remove or comment out HTTPS redirection in development
+// app.UseHttpsRedirection();
+
 app.UseCors("AllowReact");
 app.UseAuthorization();
 app.MapControllers();

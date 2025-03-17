@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { JobApplication } from '../types/JobApplication';
 
-const API_URL = 'https://localhost:5000/api';
+const API_URL = 'http://localhost:5000/api';
 
 export const api = {
     getAllApplications: async () => {
@@ -20,5 +20,9 @@ export const api = {
             application
         );
         return response.data;
+    },
+
+    deleteApplication: async (id: number) => {
+        await axios.delete(`${API_URL}/jobapplications/${id}`);
     }
 }; 

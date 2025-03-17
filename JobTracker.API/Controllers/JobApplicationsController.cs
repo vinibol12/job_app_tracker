@@ -53,5 +53,16 @@ namespace JobTracker.API.Controllers
 
             return Ok(updated);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteApplication(int id)
+        {
+            var result = await _repository.DeleteAsync(id);
+            
+            if (!result)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 } 
