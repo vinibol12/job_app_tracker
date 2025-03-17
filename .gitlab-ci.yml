@@ -1,0 +1,47 @@
+image: mcr.microsoft.com/dotnet/sdk:8.0
+
+stages:
+  - test
+  - build
+
+variables:
+  DOTNET_CLI_HOME: "/tmp/DOTNET_CLI_HOME"
+
+backend-tests:
+  stage: test
+  script:
+    - dotnet restore
+    - dotnet build --no-restore
+    - dotnet test --no-build --verbosity normal
+
+frontend-tests:
+  stage: test
+  image: node:20
+  cache:
+    paths:
+      - job-tracker-client/node_modules/
+    key:
+      files:
+        - job-tracker-client/package-lock.json
+  script:
+    - cd job-tracker-client
+    - npm ci
+    - npm test -- --watchAll=false
+
+build:
+  stage: build
+  script:
+    # Build backend
+    - dotnet restore
+    - dotnet build --configuration Release --no-restore
+    
+    # Build frontend
+    - cd job-tracker-client
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - job-tracker-client/build/
+      - JobTracker.Api/bin/
+      - JobTracker.Api/obj/
+    expire_in: 1 week 
