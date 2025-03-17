@@ -1,0 +1,33 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.vs/
+.vscode/
+
+# Node
+node_modules/
+.npm
+.env
+.env.*
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+build/
+[Bb]in/
+[Oo]bj/
+
+# IDE
+.idea/
+.history/
+*.swp
+*.swo
+*~
+
+# misc
+.DS_Store
+*.log 
