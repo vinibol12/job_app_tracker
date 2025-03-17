@@ -15,7 +15,7 @@ function App() {
             <Toaster position="top-right" />
             <div className="max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-                    Job Application Tracker
+                    Datacom Job Applications Tracker
                 </h1>
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Form Section */}
