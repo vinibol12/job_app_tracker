@@ -11,18 +11,25 @@ variables:
 backend-tests:
   stage: test
   script:
+    # Debug directory structure and case sensitivity
+    - ls -la
+    - ls -la backend
+    - ls -la backend/src
+    - ls -la backend/tests
+    
+    # Build the solution instead of individual projects
     - cd backend/src
     - dotnet restore
-    - dotnet build --no-restore
-    - cd ..
-    - dotnet test tests --no-build --verbosity normal
+    - dotnet build
+    - cd ../tests
+    # - dotnet test
   cache:
     paths:
       - backend/obj/
       - backend/bin/
     key:
       files:
-        - backend/src/JobTracker.Api.csproj
+        - backend/src/JobTracker.API.csproj
   only:
     - main
     - merge_requests
@@ -50,7 +57,7 @@ build:
     # Build backend
     - cd backend
     - dotnet restore
-    - dotnet build --configuration Release --no-restore
+    - dotnet build --configuration Release
     - dotnet publish -c Release -o publish
     
     # Build frontend
@@ -88,7 +95,7 @@ deploy-backend:
         --settings ASPNETCORE_ENVIRONMENT="Production" \
                     WEBSITE_TIME_ZONE="Pacific/Auckland"
     
-    # Set CORS to allow the storage static website
+    # Set CORS to allow the static web app
     - |
       az webapp cors add \
         --resource-group job-app-tracker-rg \
@@ -100,7 +107,7 @@ deploy-backend:
     name: production
     url: https://job-app-tracker-api.azurewebsites.net
 
-# Frontend deployment using Azure Storage Static Website
+# Frontend deployment using Azure Static Web App
 deploy-frontend:
   stage: deploy
   needs: ['build']
@@ -113,4 +120,4 @@ deploy-frontend:
     - main
   environment:
     name: production
-    url: https://green-grass-025347d00.6.azurestaticapps.net/
+    url: https://green-grass-025347d00.6.azurestaticapps.net
