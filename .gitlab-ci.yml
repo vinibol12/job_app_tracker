@@ -11,9 +11,11 @@ variables:
 backend-tests:
   stage: test
   script:
-    - dotnet restore backend
-    - dotnet build backend --no-restore
-    - dotnet test backend/tests --no-build --verbosity normal
+    - cd backend/src
+    - dotnet restore
+    - dotnet build --no-restore
+    - cd ..
+    - dotnet test tests --no-build --verbosity normal
   cache:
     paths:
       - backend/obj/
@@ -86,33 +88,29 @@ deploy-backend:
         --settings ASPNETCORE_ENVIRONMENT="Production" \
                     WEBSITE_TIME_ZONE="Pacific/Auckland"
     
-    # Set CORS to allow the static web app
+    # Set CORS to allow the storage static website
     - |
       az webapp cors add \
         --resource-group job-app-tracker-rg \
         --name job-app-tracker-api \
-        --allowed-origins "https://job-app-tracker-static.azurestaticapps.net"
+        --allowed-origins "https://green-grass-025347d00.6.azurestaticapps.net"
   only:
     - main
   environment:
     name: production
     url: https://job-app-tracker-api.azurewebsites.net
 
+# Frontend deployment using Azure Storage Static Website
 deploy-frontend:
   stage: deploy
-  needs: ['build', 'deploy-backend']
+  needs: ['build']
   image: node:20
   script:
-    # Install Static Web Apps CLI
     - npm install -g @azure/static-web-apps-cli
-    
-    # Deploy frontend using SWA CLI
     - cd frontend/build
     - swa deploy . --deployment-token "$AZURE_STATIC_WEB_APP_DEPLOYMENT_TOKEN"
   only:
     - main
-  dependencies:
-    - build  # Explicitly pull artifacts from the build job
   environment:
     name: production
-    url: https://job-app-tracker-static.azurestaticapps.net
+    url: https://green-grass-025347d00.6.azurestaticapps.net/
