@@ -41,6 +41,42 @@ namespace JobTracker.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetApplication_ReturnsOkResult_WithApplication_WhenExists()
+        {
+            // Arrange
+            var application = new JobApplication 
+            { 
+                Id = 1, 
+                CompanyName = "Test Company", 
+                Position = "Developer", 
+                Status = "Applied" 
+            };
+            _mockRepo.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(application);
+
+            // Act
+            var result = await _controller.GetApplication(1);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedApplication = Assert.IsType<JobApplication>(okResult.Value);
+            Assert.Equal(1, returnedApplication.Id);
+            Assert.Equal("Test Company", returnedApplication.CompanyName);
+        }
+
+        [Fact]
+        public async Task GetApplication_ReturnsNotFound_WhenApplicationDoesNotExist()
+        {
+            // Arrange
+            _mockRepo.Setup(repo => repo.GetByIdAsync(999)).ReturnsAsync((JobApplication)null);
+
+            // Act
+            var result = await _controller.GetApplication(999);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result.Result);
+        }
+
+        [Fact]
         public async Task CreateApplication_ReturnsCreatedAtAction()
         {
             // Arrange
@@ -60,6 +96,75 @@ namespace JobTracker.Tests.Controllers
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
             var returnedApplication = Assert.IsType<JobApplication>(createdAtActionResult.Value);
             Assert.Equal("New Company", returnedApplication.CompanyName);
+            Assert.Equal("GetApplication", createdAtActionResult.ActionName);
+            Assert.Equal(1, createdAtActionResult.RouteValues["id"]);
+        }
+
+        [Fact]
+        public async Task UpdateApplication_ReturnsOkResult_WhenSuccessful()
+        {
+            // Arrange
+            var applicationToUpdate = new JobApplication
+            {
+                Id = 1,
+                CompanyName = "Updated Company",
+                Position = "Updated Position",
+                Status = "Interviewing"
+            };
+            
+            _mockRepo.Setup(repo => repo.UpdateAsync(It.IsAny<JobApplication>()))
+                    .ReturnsAsync(applicationToUpdate);
+
+            // Act
+            var result = await _controller.UpdateApplication(1, applicationToUpdate);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedApplication = Assert.IsType<JobApplication>(okResult.Value);
+            Assert.Equal(1, returnedApplication.Id);
+            Assert.Equal("Updated Company", returnedApplication.CompanyName);
+            Assert.Equal("Interviewing", returnedApplication.Status);
+        }
+
+        [Fact]
+        public async Task UpdateApplication_ReturnsBadRequest_WhenIdMismatch()
+        {
+            // Arrange
+            var applicationToUpdate = new JobApplication
+            {
+                Id = 2, // Different from the route ID
+                CompanyName = "Updated Company",
+                Position = "Developer",
+                Status = "Applied"
+            };
+
+            // Act
+            var result = await _controller.UpdateApplication(1, applicationToUpdate);
+
+            // Assert
+            Assert.IsType<BadRequestResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task UpdateApplication_ReturnsNotFound_WhenApplicationDoesNotExist()
+        {
+            // Arrange
+            var applicationToUpdate = new JobApplication
+            {
+                Id = 999,
+                CompanyName = "Non-existent Company",
+                Position = "Developer",
+                Status = "Applied"
+            };
+            
+            _mockRepo.Setup(repo => repo.UpdateAsync(It.IsAny<JobApplication>()))
+                    .ReturnsAsync((JobApplication)null);
+
+            // Act
+            var result = await _controller.UpdateApplication(999, applicationToUpdate);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result.Result);
         }
 
         [Fact]
@@ -74,5 +179,18 @@ namespace JobTracker.Tests.Controllers
             // Assert
             Assert.IsType<NoContentResult>(result);
         }
+
+        [Fact]
+        public async Task DeleteApplication_ReturnsNotFound_WhenApplicationDoesNotExist()
+        {
+            // Arrange
+            _mockRepo.Setup(repo => repo.DeleteAsync(999)).ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.DeleteApplication(999);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
     }
-} 
+}
