@@ -55,13 +55,13 @@ build:
   stage: build
   script:
     # Build backend
-    - cd backend
+    - cd backend/src
     - dotnet restore
     - dotnet build --configuration Release
-    - dotnet publish -c Release -o publish
+    - dotnet publish -c Release -o ../publish
     
     # Build frontend
-    - cd ../frontend
+    - cd ../../frontend
     - npm ci
     - npm run build
   artifacts:
@@ -87,13 +87,31 @@ deploy-backend:
     - az login --service-principal -u $AZURE_APP_ID -p $AZURE_PASSWORD --tenant $AZURE_TENANT_ID
     - az webapp deployment source config-zip --resource-group job-app-tracker-rg --name job-app-tracker-api --src backend.zip
     
-    # Update app settings if needed
+    # Update app settings
     - |
       az webapp config appsettings set \
         --resource-group job-app-tracker-rg \
         --name job-app-tracker-api \
         --settings ASPNETCORE_ENVIRONMENT="Production" \
-                    WEBSITE_TIME_ZONE="Pacific/Auckland"
+                  WEBSITE_TIME_ZONE="Pacific/Auckland" \
+                  WEBSITES_PORT="8080" \
+                  ASPNETCORE_URLS="http://+:8080" \
+                  WEBSITE_HTTPLOGGING_RETENTION_DAYS="7"
+    
+    # Configure health checks
+    - |
+      az webapp config set \
+        --resource-group job-app-tracker-rg \
+        --name job-app-tracker-api \
+        --always-on true
+    
+    # Set health check path
+    - |
+      az webapp config set \
+        --resource-group job-app-tracker-rg \
+        --name job-app-tracker-api \
+        --health-check-path "/swagger" \
+        --generic-configurations '{"healthCheckPath":"/swagger"}'
     
     # Set CORS to allow the static web app
     - |

@@ -8,6 +8,10 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Configure server port for Azure App Service
+        // This must be done before building the app
+        ConfigureKestrel(builder);
+
         // Add services to the container.
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
@@ -22,9 +26,12 @@ public partial class Program
         // Add Repository
         builder.Services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
 
-        // Read CORS configuration from appsettings.json
-        var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-            ?? new[] { "http://localhost:3000" };  // Default to localhost if not configured
+        // Define explicit CORS origins including both local and production. Would set this dynamically
+        // in a real world scenario. 
+        var corsOrigins = new[] { 
+            "http://localhost:3000",
+            "https://green-grass-025347d00.6.azurestaticapps.net" 
+        };
 
         // Update CORS policy
         builder.Services.AddCors(options =>
@@ -33,8 +40,7 @@ public partial class Program
             {
                 policy.WithOrigins(corsOrigins)
                       .AllowAnyMethod()
-                      .AllowAnyHeader()
-                      .AllowCredentials();
+                      .AllowAnyHeader();
             });
         });
 
@@ -57,7 +63,27 @@ public partial class Program
         app.UseCors("AllowReact");
         app.UseAuthorization();
         app.MapControllers();
-
+        
+        // Add a diagnostic endpoint
+        app.MapGet("/", () => $"Job Tracker API is running. Go to /swagger for API documentation. Server time: {DateTime.UtcNow}");
+        
         app.Run();
+    }
+
+    private static void ConfigureKestrel(WebApplicationBuilder builder)
+    {
+        // Get port from environment variables for Azure App Service compatibility
+        var port = Environment.GetEnvironmentVariable("PORT") ?? 
+                  Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? 
+                  "8080";
+            
+        Console.WriteLine($"Configuring Kestrel to listen on port {port}");
+            
+        builder.WebHost.ConfigureKestrel(serverOptions =>
+        {
+            serverOptions.ListenAnyIP(int.Parse(port));
+        });
+            
+        builder.WebHost.UseUrls($"http://*:{port}");
     }
 }

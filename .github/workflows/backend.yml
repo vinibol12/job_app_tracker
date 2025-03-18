@@ -1,0 +1,65 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: job-app-tracker-api
+  AZURE_WEBAPP_PACKAGE_PATH: 'backend/publish'
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://job-app-tracker-api.azurewebsites.net
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Build with dotnet
+      run: |
+        cd backend/src
+        dotnet build --configuration Release
+        dotnet publish -c Release -o ../publish
+    
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+    
+    - name: Configure Azure Web App Settings
+      uses: azure/CLI@v1
+      with:
+        azcliversion: latest
+        inlineScript: |
+          az login --service-principal -u ${{ secrets.AZURE_APP_ID }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+          
+          az webapp config appsettings set \
+            --resource-group job-app-tracker-rg \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --settings ASPNETCORE_ENVIRONMENT="Production" \
+                      WEBSITE_TIME_ZONE="Pacific/Auckland" \
+                      WEBSITES_PORT="8080" \
+                      ASPNETCORE_URLS="http://+:8080" \
+                      WEBSITE_HTTPLOGGING_RETENTION_DAYS="7"
+          
+          az webapp config set \
+            --resource-group job-app-tracker-rg \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --always-on true \
+            --health-check-path "/swagger" \
+            --generic-configurations '{"healthCheckPath":"/swagger"}'
