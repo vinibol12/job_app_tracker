@@ -12,6 +12,7 @@ This is intended for the purpose of demonstrating my skills and experience with 
 - Delete applications that are no longer relevant
 - Simple and intuitive user interface
 - Responsive layout working well in mobile too. 
+- The most recent applications show at the top of the list. So, when we add a new application it's not hidden in the last page.  
 
 ## Tech Stack
 

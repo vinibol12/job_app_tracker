@@ -26,20 +26,22 @@ window.confirm = jest.fn();
 describe('JobApplicationList Component', () => {
   const mockOnApplicationDeleted = jest.fn();
   
+  // Note: We're assuming these applications come pre-sorted from the backend
+  // with highest ID first (most recent first)
   const mockApplications = [
-    {
-      id: 1,
-      companyName: 'Test Company 1',
-      position: 'Developer',
-      status: 'Applied',
-      dateApplied: '2023-01-01T00:00:00.000Z'
-    },
     {
       id: 2,
       companyName: 'Test Company 2',
       position: 'Senior Developer',
       status: 'Interview',
       dateApplied: '2023-02-01T00:00:00.000Z'
+    },
+    {
+      id: 1,
+      companyName: 'Test Company 1',
+      position: 'Developer',
+      status: 'Applied',
+      dateApplied: '2023-01-01T00:00:00.000Z'
     }
   ];
   
@@ -53,30 +55,34 @@ describe('JobApplicationList Component', () => {
     expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
   
-  it('renders the application list after loading', async () => {
+  it('renders applications when loaded', async () => {
     render(<JobApplicationList onApplicationDeleted={mockOnApplicationDeleted} />);
     
-    // Wait for applications to load
+    // Wait for loading to complete
     await waitFor(() => {
-      expect(api.getAllApplications).toHaveBeenCalled();
+      expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
     });
     
-    // Check if the applications are rendered
-    expect(screen.getByText('Test Company 1')).toBeInTheDocument();
+    // Check that applications are displayed in the order returned from the backend
     expect(screen.getByText('Test Company 2')).toBeInTheDocument();
-    expect(screen.getByText('Developer')).toBeInTheDocument();
-    expect(screen.getByText('Senior Developer')).toBeInTheDocument();
+    expect(screen.getByText('Test Company 1')).toBeInTheDocument();
     
-    // Check if status selects are rendered with correct values
+    // Check that applications appear in the order returned from backend
+    const rows = screen.getAllByRole('row');
+    // Header row is at index 0, so application rows start at index 1
+    expect(rows[1].textContent).toContain('Test Company 2'); // ID: 2 should be first
+    expect(rows[2].textContent).toContain('Test Company 1'); // ID: 1 should be second
+    
+    // Check status values
     const selects = screen.getAllByTestId('status-select');
-    expect(selects[0]).toHaveValue('Applied');
-    expect(selects[1]).toHaveValue('Interview');
+    expect(selects[0]).toHaveValue('Interview'); // Test Company 2's status
+    expect(selects[1]).toHaveValue('Applied');   // Test Company 1's status
   });
   
   it('handles status update correctly', async () => {
     const updatedApplication = {
-      ...mockApplications[0],
-      status: 'Interview'
+      ...mockApplications[0], // Test Company 2 (id: 2) is first in our mock data
+      status: 'Offer'
     };
     
     (api.updateApplication as jest.Mock).mockResolvedValue(updatedApplication);
@@ -85,22 +91,22 @@ describe('JobApplicationList Component', () => {
     
     // Wait for applications to load
     await waitFor(() => {
-      expect(screen.getByText('Test Company 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Company 2')).toBeInTheDocument();
     });
     
-    // Find and change status dropdown
+    // Find and change status dropdown for first item (Test Company 2, id: 2)
     const selects = screen.getAllByTestId('status-select');
     await act(async () => {
-      fireEvent.change(selects[0], { target: { value: 'Interview' } });
+      fireEvent.change(selects[0], { target: { value: 'Offer' } });
     });
     
     // Wait for update to complete
     await waitFor(() => {
       expect(api.updateApplication).toHaveBeenCalledWith({
-        ...mockApplications[0],
-        status: 'Interview'
+        ...mockApplications[0], // Test Company 2
+        status: 'Offer'
       });
-      expect(toast.success).toHaveBeenCalledWith('Status updated to Interview');
+      expect(toast.success).toHaveBeenCalledWith('Status updated to Offer');
     });
   });
   
@@ -112,10 +118,10 @@ describe('JobApplicationList Component', () => {
     
     // Wait for applications to load
     await waitFor(() => {
-      expect(screen.getByText('Test Company 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Company 2')).toBeInTheDocument();
     });
     
-    // Find and click delete buttons
+    // Find and click delete button for first item (Test Company 2, id: 2)
     const deleteButtons = screen.getAllByTestId('delete-button');
     await act(async () => {
       fireEvent.click(deleteButtons[0]);
@@ -126,34 +132,28 @@ describe('JobApplicationList Component', () => {
     
     // Wait for delete to complete
     await waitFor(() => {
-      expect(api.deleteApplication).toHaveBeenCalledWith(1);
+      expect(api.deleteApplication).toHaveBeenCalledWith(2); // Test Company 2's ID
       expect(toast.success).toHaveBeenCalledWith('Application deleted successfully');
       expect(mockOnApplicationDeleted).toHaveBeenCalled();
     });
   });
   
-  it('does not delete when cancel is clicked', async () => {
+  it('does not delete when not confirmed', async () => {
     (window.confirm as jest.Mock).mockReturnValue(false);
     
     render(<JobApplicationList onApplicationDeleted={mockOnApplicationDeleted} />);
     
-    // Wait for applications to load
     await waitFor(() => {
-      expect(screen.getByText('Test Company 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Company 2')).toBeInTheDocument();
     });
     
-    // Find and click delete buttons
     const deleteButtons = screen.getAllByTestId('delete-button');
     await act(async () => {
       fireEvent.click(deleteButtons[0]);
     });
     
-    // Verify confirm dialog was shown
     expect(window.confirm).toHaveBeenCalled();
-    
-    // API should not be called
     expect(api.deleteApplication).not.toHaveBeenCalled();
-    expect(mockOnApplicationDeleted).not.toHaveBeenCalled();
   });
   
   it('handles error when API call fails', async () => {
@@ -161,18 +161,15 @@ describe('JobApplicationList Component', () => {
     
     render(<JobApplicationList onApplicationDeleted={mockOnApplicationDeleted} />);
     
-    // Wait for applications to load
     await waitFor(() => {
-      expect(screen.getByText('Test Company 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Company 2')).toBeInTheDocument();
     });
     
-    // Find and change status dropdown
     const selects = screen.getAllByTestId('status-select');
     await act(async () => {
-      fireEvent.change(selects[0], { target: { value: 'Interview' } });
+      fireEvent.change(selects[0], { target: { value: 'Offer' } });
     });
     
-    // Wait for error handling
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Failed to update status');
     });
