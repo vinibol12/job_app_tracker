@@ -11,9 +11,19 @@ variables:
 backend-tests:
   stage: test
   script:
-    - dotnet restore
-    - dotnet build --no-restore
-    - dotnet test --no-build --verbosity normal
+    - dotnet restore backend
+    - dotnet build backend --no-restore
+    - dotnet test backend/tests --no-build --verbosity normal
+  cache:
+    paths:
+      - backend/obj/
+      - backend/bin/
+    key:
+      files:
+        - backend/src/JobTracker.Api.csproj
+  only:
+    - main
+    - merge_requests
 
 frontend-tests:
   stage: test
@@ -28,6 +38,9 @@ frontend-tests:
     - cd frontend
     - npm ci
     - npm test -- --watchAll=false
+  only:
+    - main
+    - merge_requests
 
 build:
   stage: build
@@ -47,33 +60,62 @@ build:
       - backend/publish/
       - frontend/build/
     expire_in: 1 week
+  only:
+    - main
 
-deploy:
+deploy-backend:
   stage: deploy
   needs: ['build']
   image: mcr.microsoft.com/azure-cli
   script:
     # Install zip
-    - apt-get update && apt-get install -y zip
+    - apk add --no-cache zip
 
     # Deploy backend
     - cd backend/publish
     - zip -r backend.zip .
+    - echo "$AZURE_WEBAPP_PUBLISH_PROFILE" > publish_profile.xml
     - az login --service-principal -u $AZURE_APP_ID -p $AZURE_PASSWORD --tenant $AZURE_TENANT_ID
     - az webapp deployment source config-zip --resource-group job-app-tracker-rg --name job-app-tracker-api --src backend.zip
     
-    # Deploy frontend to Static Web App
-    - cd ../../frontend/build
-    - az staticwebapp deployment create \
+    # Update app settings if needed
+    - |
+      az webapp config appsettings set \
         --resource-group job-app-tracker-rg \
-        --name job-app-tracker-static \
-        --source . \
-        --branch production \
-        --app-location "/" \
-        --output-location "build"
+        --name job-app-tracker-api \
+        --settings ASPNETCORE_ENVIRONMENT="Production" \
+                    WEBSITE_TIME_ZONE="Pacific/Auckland"
+    
+    # Set CORS to allow the static web app
+    - |
+      az webapp cors add \
+        --resource-group job-app-tracker-rg \
+        --name job-app-tracker-api \
+        --allowed-origins "https://job-app-tracker-static.azurestaticapps.net"
   only:
     - main
-  variables:
-    AZURE_APP_ID: ${AZURE_APP_ID}
-    AZURE_PASSWORD: ${AZURE_PASSWORD}
-    AZURE_TENANT_ID: ${AZURE_TENANT_ID} 
+  environment:
+    name: production
+    url: https://job-app-tracker-api.azurewebsites.net
+
+deploy-frontend:
+  stage: deploy
+  needs: ['build', 'deploy-backend']
+  image: mcr.microsoft.com/azure-cli
+  script:
+    # Install dependencies
+    - apk add --no-cache npm
+
+    # Deploy frontend to Static Web App
+    - cd frontend/build
+    - >
+      az staticwebapp deploy 
+      --resource-group job-app-tracker-rg 
+      --name job-app-tracker-static 
+      --source . 
+      --token "$AZURE_STATIC_WEB_APP_DEPLOYMENT_TOKEN"
+  only:
+    - main
+  environment:
+    name: production
+    url: https://job-app-tracker-static.azurestaticapps.net

@@ -11,6 +11,8 @@ public partial class Program
         // Add services to the container.
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
+        
+        // Add Swagger in all environments for API documentation
         builder.Services.AddSwaggerGen();
 
         // Add DbContext
@@ -20,12 +22,16 @@ public partial class Program
         // Add Repository
         builder.Services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
 
-        // Update CORS policy to be more specific
+        // Read CORS configuration from appsettings.json
+        var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+            ?? new[] { "http://localhost:3000" };  // Default to localhost if not configured
+
+        // Update CORS policy
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowReact", policy =>
             {
-                policy.WithOrigins("http://localhost:3000")  // React's default port
+                policy.WithOrigins(corsOrigins)
                       .AllowAnyMethod()
                       .AllowAnyHeader()
                       .AllowCredentials();
@@ -35,7 +41,9 @@ public partial class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        // Enable Swagger in all environments
+        
+        // Enable Swagger in all environments for API documentation
+        // (For demo purposes, we want this available in production)
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {

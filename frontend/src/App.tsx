@@ -10,6 +10,10 @@ function App() {
         setRefresh(!refresh);
     };
 
+    // Determine API base URL based on environment
+    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const swaggerUrl = apiBaseUrl.replace('/api', '/swagger');
+
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
             <Toaster position="top-right" />
@@ -19,7 +23,7 @@ function App() {
                 </h1>
                 <div className="flex justify-center mb-8">
                     <a 
-                        href="http://localhost:5000/swagger" 
+                        href={swaggerUrl}
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
