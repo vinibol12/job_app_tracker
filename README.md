@@ -28,9 +28,66 @@ This is intended for the purpose of demonstrating my skills and experience with 
 - RESTful API endpoints
 - xUnit for testing
 
-## Running the Application
+## Development Workflow
 
-### Backend
+This project offers multiple ways to run and test the application. You can run components together locally for development convenience, or separately to simulate the production environment.
+
+### Command Reference
+
+All commands should be run from the root directory of the project.
+
+#### Installation
+
+```bash
+# Install all dependencies (frontend and backend)
+npm run install:all
+
+# Install just the root dependencies (if you've already set up projects separately)
+npm install
+```
+
+#### Running the Application
+
+```bash
+# Run both frontend and backend concurrently (development mode)
+npm start
+
+# Run just the frontend
+npm run start:frontend
+
+# Run just the backend
+npm run start:backend
+```
+
+#### Testing
+
+```bash
+# Run all tests (frontend and backend) concurrently
+npm test
+
+# Run just the frontend tests
+npm run test:frontend
+
+# Run just the backend tests
+npm run test:backend
+```
+
+#### Access Points
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000/api
+
+### Development vs Production
+
+- **Development (Local)**: Running the application with `npm start` launches both frontend and backend concurrently, which is convenient for development. Changes to code can be seen in real-time.
+
+- **Production**: In the production environment, the frontend and backend are deployed as separate services. This separation allows for independent scaling, maintenance, and updates. The CI/CD pipeline handles the deployment of both services separately.
+
+### Component-Specific Instructions
+
+If you need to work on just one component or need more detailed instructions, follow the guides below:
+
+#### Backend Setup
 
 1. Navigate to the backend directory:
    ```
@@ -49,7 +106,7 @@ This is intended for the purpose of demonstrating my skills and experience with 
    
    The backend API will be available at http://localhost:5000/api
 
-### Frontend
+#### Frontend Setup
 
 1. Navigate to the frontend directory:
    ```
@@ -68,7 +125,7 @@ This is intended for the purpose of demonstrating my skills and experience with 
    
    The application will be available at http://localhost:3000
 
-## Running Tests
+## Testing Details
 
 ### Backend Tests
 

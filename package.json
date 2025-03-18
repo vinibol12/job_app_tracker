@@ -1,0 +1,30 @@
+{
+  "name": "job-application-tracker",
+  "version": "1.0.0",
+  "description": "Job Application Tracker - Full Stack Application",
+  "main": "index.js",
+  "scripts": {
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && dotnet run --project src/JobTracker.Api.csproj",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend/tests && dotnet test",
+    "test": "concurrently \"npm run test:backend\" \"npm run test:frontend\"",
+    "install:all": "cd frontend && npm install && cd ../backend/src && dotnet restore && cd ../tests && dotnet restore"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vinibol12/job_app_tracker.git"
+  },
+  "keywords": [
+    "react",
+    "dotnet",
+    "job",
+    "tracking"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
