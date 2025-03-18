@@ -67,7 +67,7 @@ namespace JobTracker.Tests.Controllers
         public async Task GetApplication_ReturnsNotFound_WhenApplicationDoesNotExist()
         {
             // Arrange
-            _mockRepo.Setup(repo => repo.GetByIdAsync(999)).ReturnsAsync((JobApplication)null);
+            _mockRepo.Setup(repo => repo.GetByIdAsync(999)).ReturnsAsync((JobApplication?)null);
 
             // Act
             var result = await _controller.GetApplication(999);
@@ -97,7 +97,7 @@ namespace JobTracker.Tests.Controllers
             var returnedApplication = Assert.IsType<JobApplication>(createdAtActionResult.Value);
             Assert.Equal("New Company", returnedApplication.CompanyName);
             Assert.Equal("GetApplication", createdAtActionResult.ActionName);
-            Assert.Equal(1, createdAtActionResult.RouteValues["id"]);
+            Assert.Equal(1, createdAtActionResult.RouteValues?["id"]);
         }
 
         [Fact]
@@ -158,7 +158,7 @@ namespace JobTracker.Tests.Controllers
             };
             
             _mockRepo.Setup(repo => repo.UpdateAsync(It.IsAny<JobApplication>()))
-                    .ReturnsAsync((JobApplication)null);
+                    .ReturnsAsync((JobApplication?)null);
 
             // Act
             var result = await _controller.UpdateApplication(999, applicationToUpdate);

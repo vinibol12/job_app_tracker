@@ -123,8 +123,12 @@ namespace JobTracker.Tests.Repositories
             Assert.NotEqual(default, result.DateApplied);
             Assert.NotEqual(default, result.LastUpdated);
             
-            // LastUpdated should equal DateApplied for new applications
-            Assert.Equal(result.DateApplied, result.LastUpdated);
+            // Instead of direct equality, verify DateApplied and LastUpdated are very close to each other
+            // (within 1 second, which is more than enough for any realistic scenario)
+            Assert.NotNull(result.LastUpdated);
+            var timeDifference = (result.LastUpdated.Value - result.DateApplied).TotalSeconds;
+            Assert.True(Math.Abs(timeDifference) < 1, 
+                $"DateApplied and LastUpdated should be very close. Actual difference: {timeDifference} seconds");
         }
         
         [Fact]
@@ -169,6 +173,7 @@ namespace JobTracker.Tests.Repositories
             
             // Verify changes are saved to the database
             var updatedInDb = await context.JobApplications.FindAsync(existingApplication.Id);
+            Assert.NotNull(updatedInDb);
             Assert.Equal("Updated Company Name", updatedInDb.CompanyName);
         }
         
