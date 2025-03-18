@@ -76,8 +76,8 @@ npm run test:backend
 #### Access Points
 
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:5000/api
-- API Documentation (Swagger UI): http://localhost:5000/swagger
+- Backend API: http://localhost:8080/api
+- API Documentation (Swagger UI): http://localhost:8080/swagger
 
 ### Development vs Production
 

@@ -26,11 +26,11 @@ export const resetApplications = () => {
 };
 
 export const handlers = [
-    rest.get('http://localhost:5000/api/jobapplications', (req, res, ctx) => {
+    rest.get('http://localhost:8080/api/jobapplications', (req, res, ctx) => {
         return res(ctx.json(applications));
     }),
 
-    rest.post('http://localhost:5000/api/jobapplications', async (req, res, ctx) => {
+    rest.post('http://localhost:8080/api/jobapplications', async (req, res, ctx) => {
         const newApp = {
             id: applications.length + 1,
             ...(req.body as Partial<JobApplication>),
@@ -41,7 +41,7 @@ export const handlers = [
         return res(ctx.json(newApp));
     }),
 
-    rest.put('http://localhost:5000/api/jobapplications/:id', (req, res, ctx) => {
+    rest.put('http://localhost:8080/api/jobapplications/:id', (req, res, ctx) => {
         const id = parseInt(req.params.id as string);
         const updatedApp = req.body as JobApplication;
         
@@ -52,7 +52,7 @@ export const handlers = [
         return res(ctx.json(updatedApp));
     }),
 
-    rest.delete('http://localhost:5000/api/jobapplications/:id', (req, res, ctx) => {
+    rest.delete('http://localhost:8080/api/jobapplications/:id', (req, res, ctx) => {
         const id = parseInt(req.params.id as string);
         applications = applications.filter(app => app.id !== id);
         return res(ctx.status(204));
