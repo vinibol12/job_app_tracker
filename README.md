@@ -25,7 +25,7 @@ This is intended for the purpose of demonstrating my skills and experience with 
 
 ### Backend
 - C# .NET
-- SQLite database (ephemeral for POC)
+- Entity Framework Core InMemory (for POC)
 - RESTful API endpoints
 - xUnit for testing
 
@@ -181,7 +181,7 @@ The application is deployed to Azure and is accessible in production. CI/CD pipe
 
 ## Important Notes
 
-- **Data Storage**: The application currently uses an ephemeral SQLite database for the proof of concept, meaning data will not persist between service restarts in production. In a real production environment, this would be replaced with a persistent database solution.
+- **Data Storage**: The application currently uses an ephemeral database for the proof of concept, meaning data will not persist between service restarts in production. In a real production environment, this would be replaced with a persistent database solution.
 
 - **API Mocking**: Frontend tests use mock API responses to isolate testing from the backend, ensuring tests are reliable and not dependent on the backend state.
 

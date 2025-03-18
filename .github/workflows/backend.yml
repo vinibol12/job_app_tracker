@@ -35,14 +35,33 @@ jobs:
         
     - name: Run tests
       run: |
-        cd backend
-        dotnet test --configuration Release
+        # Check directory structure first to debug
+        pwd
+        ls -la
+        ls -la backend || echo "backend dir not found"
+        ls -la backend/src || echo "backend/src dir not found"
+        ls -la backend/tests || echo "backend/tests dir not found"
+        find . -name "*.csproj" -type f | grep -v obj
+        
+        # Then try to build and test
+        if [ -d "backend" ]; then
+          cd backend
+          find . -name "*.csproj" -type f | grep -v obj
+          # Account for case sensitivity - use the correct casing for the .csproj file
+          if [ -f "src/JobTracker.API.csproj" ]; then
+            dotnet build src/JobTracker.API.csproj --configuration Release
+            dotnet test tests/JobTracker.Tests.csproj --configuration Release
+          else
+            echo "Project files not found at expected locations"
+            exit 1
+          fi
+        fi
         
     - name: Build with dotnet
       run: |
         cd backend/src
-        dotnet build --configuration Release
-        dotnet publish -c Release -o ../publish
+        dotnet build JobTracker.API.csproj --configuration Release
+        dotnet publish JobTracker.API.csproj -c Release -o ../publish
     
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
