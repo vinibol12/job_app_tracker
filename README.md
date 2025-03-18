@@ -13,6 +13,7 @@ This is intended for the purpose of demonstrating my skills and experience with 
 - Simple and intuitive user interface
 - Responsive layout working well in mobile too. 
 - The most recent applications show at the top of the list. So, when we add a new application it's not hidden in the last page.  
+- There's a link in the front end to the API documentation. This wouldn't normally be available in production. It's only there for the purpose of this demo.
 
 ## Tech Stack
 
@@ -76,6 +77,7 @@ npm run test:backend
 
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:5000/api
+- API Documentation (Swagger UI): http://localhost:5000/swagger
 
 ### Development vs Production
 
@@ -152,6 +154,22 @@ If you need to work on just one component or need more detailed instructions, fo
    ```
    
    This will run both unit tests and integration tests. The frontend tests use mocks to simulate the backend API.
+
+## API Documentation
+
+The application includes Swagger UI for API documentation and testing. You can access the Swagger UI in two ways:
+
+1. **Directly from the browser**: Visit http://localhost:5000/swagger when the backend is running.
+
+2. **From the frontend application**: Click the "API Documentation" link below the main title.
+
+Swagger UI provides:
+- A comprehensive list of all available API endpoints
+- Request and response schemas for each endpoint
+- The ability to test API calls directly from the browser
+- Documentation on required parameters and authentication
+
+This is particularly useful for frontend developers who need to understand the API capabilities, as well as for debugging purposes during development.
 
 ## Deployment
 
