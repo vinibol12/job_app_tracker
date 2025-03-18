@@ -101,21 +101,18 @@ deploy-backend:
 deploy-frontend:
   stage: deploy
   needs: ['build', 'deploy-backend']
-  image: mcr.microsoft.com/azure-cli
+  image: node:20
   script:
-    # Install dependencies
-    - apk add --no-cache npm
-
-    # Deploy frontend to Static Web App
+    # Install Static Web Apps CLI
+    - npm install -g @azure/static-web-apps-cli
+    
+    # Deploy frontend using SWA CLI
     - cd frontend/build
-    - >
-      az staticwebapp deploy 
-      --resource-group job-app-tracker-rg 
-      --name job-app-tracker-static 
-      --source . 
-      --token "$AZURE_STATIC_WEB_APP_DEPLOYMENT_TOKEN"
+    - swa deploy . --deployment-token "$AZURE_STATIC_WEB_APP_DEPLOYMENT_TOKEN"
   only:
     - main
+  dependencies:
+    - build  # Explicitly pull artifacts from the build job
   environment:
     name: production
     url: https://job-app-tracker-static.azurestaticapps.net
