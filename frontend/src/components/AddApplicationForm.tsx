@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { JobApplication } from '../types/JobApplication';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
 
