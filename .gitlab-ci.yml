@@ -3,6 +3,7 @@ image: mcr.microsoft.com/dotnet/sdk:8.0
 stages:
   - test
   - build
+  - deploy
 
 variables:
   DOTNET_CLI_HOME: "/tmp/DOTNET_CLI_HOME"
@@ -19,12 +20,12 @@ frontend-tests:
   image: node:20
   cache:
     paths:
-      - job-tracker-client/node_modules/
+      - frontend/node_modules/
     key:
       files:
-        - job-tracker-client/package-lock.json
+        - frontend/package-lock.json
   script:
-    - cd job-tracker-client
+    - cd frontend
     - npm ci
     - npm test -- --watchAll=false
 
@@ -32,16 +33,47 @@ build:
   stage: build
   script:
     # Build backend
+    - cd backend
     - dotnet restore
     - dotnet build --configuration Release --no-restore
+    - dotnet publish -c Release -o publish
     
     # Build frontend
-    - cd job-tracker-client
+    - cd ../frontend
     - npm ci
     - npm run build
   artifacts:
     paths:
-      - job-tracker-client/build/
-      - JobTracker.Api/bin/
-      - JobTracker.Api/obj/
-    expire_in: 1 week 
+      - backend/publish/
+      - frontend/build/
+    expire_in: 1 week
+
+deploy:
+  stage: deploy
+  needs: ['build']
+  image: mcr.microsoft.com/azure-cli
+  script:
+    # Install zip
+    - apt-get update && apt-get install -y zip
+
+    # Deploy backend
+    - cd backend/publish
+    - zip -r backend.zip .
+    - az login --service-principal -u $AZURE_APP_ID -p $AZURE_PASSWORD --tenant $AZURE_TENANT_ID
+    - az webapp deployment source config-zip --resource-group job-app-tracker-rg --name job-app-tracker-api --src backend.zip
+    
+    # Deploy frontend to Static Web App
+    - cd ../../frontend/build
+    - az staticwebapp deployment create \
+        --resource-group job-app-tracker-rg \
+        --name job-app-tracker-static \
+        --source . \
+        --branch production \
+        --app-location "/" \
+        --output-location "build"
+  only:
+    - main
+  variables:
+    AZURE_APP_ID: ${AZURE_APP_ID}
+    AZURE_PASSWORD: ${AZURE_PASSWORD}
+    AZURE_TENANT_ID: ${AZURE_TENANT_ID} 
