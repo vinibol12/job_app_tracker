@@ -30,17 +30,18 @@ public partial class Program
         // in a real world scenario. 
         var corsOrigins = new[] { 
             "http://localhost:3000",
-            "https://green-grass-025347d00.6.azurestaticapps.net" 
+            "https://green-grass-025347d00.6.azurestaticapps.net",
+            "https://green-grass-025347d00-preview.eastasia.6.azurestaticapps.net/"
         };
 
         // Update CORS policy
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("AllowReact", policy =>
+            options.AddPolicy("AllowAll", builder =>
             {
-                policy.WithOrigins(corsOrigins)
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
             });
         });
 
@@ -60,7 +61,7 @@ public partial class Program
         // Remove or comment out HTTPS redirection in development
         // app.UseHttpsRedirection();
 
-        app.UseCors("AllowReact");
+        app.UseCors("AllowAll");
         app.UseAuthorization();
         app.MapControllers();
         

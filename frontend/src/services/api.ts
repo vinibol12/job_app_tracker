@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { JobApplication } from '../types/JobApplication';
 
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
